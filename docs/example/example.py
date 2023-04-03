@@ -177,12 +177,6 @@ ct.playouts(myRun,0,[5], numPlays=1)
 ct.playouts(myRun,0,[6], numPlays=1)
 
 # + tags=[]
-aaa,bbb=ct.errProbBounds(.435)
-
-# + tags=[]
-aaa
-
-# + tags=[] jupyter={"outputs_hidden": true}
 # Report text information for the current run.
 # The report results are cumulative.  So if you do more playouts later using the same run and then call 
 # for a report, the new report will include results from all playouts that have ever been done on that run object.
@@ -229,7 +223,7 @@ print('Total elapsed time = {:>7.2f}'.format(time.time() - startTime))
 myRunReadBack = ctu.shelfRun(filename='example', mode='read', key='example')
 
 # + tags=[]
-# Run a few more playouts on the read-back run object, print updated information, then rewrite the object to file.
+# Run a few more playouts on the run object you read back, then print updated information, and then rewrite the run object to file.
 # Writing and then reading-back run objects allows true continuation of runs.
 ct.playouts(myRunReadBack, eventsPerPlayout=1000, pathType=[-2], projectedGateDecision=True, pctDefn='absolute',
                 cpParm=0.2, banditMode='thresh', banditThreshCut=5.0,
@@ -262,9 +256,9 @@ ct.replayBest(myRunReadBack,10,0)
 ct.textReports(myRunReadBack,playoutsToReport=0, includeGateInfo=True)
 
 # + tags=[]
-# Print playout reports but restrict them only to playouts with specific numbers of variables used
-# Note that the best playout w/, n variables shown here is not necessarily the best one could achieve with
-# n perfectly-chosen variables.  The reason is that these playouts were initially run w/o any limit on the 
+# Print playout reports but restrict them only to playouts with specific numbers of variables used.
+# Note that the best playout w/, n variables shown here is not necessarily the best that one could have achieved
+# with n variables.  The reason is that these playouts were initially run w/o any limit on the 
 # number of variables.  So, the paths with only a small number of variables (which is what you're looking at
 # here) were competing against the top overall paths rather than against the top paths with only n variables.  
 # This isn't the same as letting the MC tree run freely but telling it to only ever use n variables.  
