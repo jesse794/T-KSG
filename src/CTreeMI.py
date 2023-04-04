@@ -29,7 +29,7 @@ varNames is a list of names for the variables <br/>
 Optional arguments allow for specifying some variables as discrete and also for normalizing inputs <br/>
 
 2. Create a run and pass it a dataset: myRun = run(myDataset).
-A run holds all information about all nodes and all playouts for all playouts that you have run on it (see below). <br/>
+A run holds all information about all nodes and all playouts that you have run on it (see below). <br/>
 myDataset is the dataset to use for the run. Additional arguments define how the path will be optimized (see below)<br/>
 
 3. Execute one or more playouts for your run: playouts(myRun,100,[-2],50)<br/>

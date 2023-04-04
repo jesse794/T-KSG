@@ -34,7 +34,7 @@ Optional arguments allow for specifying some variables as discrete and also for 
 </li>
 <li>
 <p>Create a run and pass it a dataset: myRun = run(myDataset).
-A run holds all information about all nodes and all playouts for all playouts that you have run on it (see below). <br/>
+A run holds all information about all nodes and all playouts that you have run on it (see below). <br/>
 myDataset is the dataset to use for the run. Additional arguments define how the path will be optimized (see below)<br/></p>
 </li>
 <li>
@@ -151,7 +151,7 @@ varNames is a list of names for the variables &lt;br/&gt;
 Optional arguments allow for specifying some variables as discrete and also for normalizing inputs &lt;br/&gt;
 
 2. Create a run and pass it a dataset: myRun = run(myDataset).
-A run holds all information about all nodes and all playouts for all playouts that you have run on it (see below). &lt;br/&gt;
+A run holds all information about all nodes and all playouts that you have run on it (see below). &lt;br/&gt;
 myDataset is the dataset to use for the run. Additional arguments define how the path will be optimized (see below)&lt;br/&gt;
 
 3. Execute one or more playouts for your run: playouts(myRun,100,[-2],50)&lt;br/&gt;
@@ -1219,7 +1219,7 @@ class path:
         return varNameList
 
     def pathId(self):
-        &#34;&#34;&#34;Given a path, returns the decimal and the the binary string
+        &#34;&#34;&#34;Given a path, returns the decimal and the binary string
         representation of the pathID, where the binary representation
         shows which variables are included and which are excluded&#34;&#34;&#34;
         pathIdDecimal = 0
@@ -1613,7 +1613,7 @@ def nodeIDFromVarList(varList, varNum):
     &#34;&#34;&#34;Given a list of included variable numbers and the variable number associated with the node, return the nodeID.
     The nodeID is such that when represented in binary, it should just show a 1 for each variable number that was
     included on the path taken from the top of the tree to reach the node.  Note that two different nodes in a tree
-    could have the same nodID.  However, they will be associated with different variables.  So, to uniquely identify a
+    could have the same nodeID.  However, they will be associated with different variables.  So, to uniquely identify a
     node, you need its nodeID and the variable it&#39;s associated with.  Note that the nodeID for a node in layer n
     can only have 1&#39;s in positions 0 through n-1.&#34;&#34;&#34;
     nodeID = 0
@@ -1673,7 +1673,7 @@ def gatesStatus(locNodeList):
 
 
 def openAllGates(locNodeList):
-    &#34;&#34;&#34;&#34;Given a nodelist, open both gate for each node.&#34;&#34;&#34;
+    &#34;&#34;&#34;Given a nodelist, open both gates for each node.&#34;&#34;&#34;
     for currNode in locNodeList:
         currNode.incPathOpen = True
         currNode.excPathOpen = True
@@ -1759,7 +1759,7 @@ def meanSigmaFromList(locList, doFit=False):
     nEntries = len(locList)
     if doFit:
         mean, rms = norm.fit(locList)
-        errOnMean = mean/(nEntries ** 0.5)
+        errOnMean = rms/(nEntries ** 0.5)
     else:
         sumVals = sum(locList)
         sumValsSq = sum([_*_ for _ in locList])
@@ -2806,7 +2806,7 @@ These are the nodes that are sitting at the tops of untested paths.</p></div>
     nEntries = len(locList)
     if doFit:
         mean, rms = norm.fit(locList)
-        errOnMean = mean/(nEntries ** 0.5)
+        errOnMean = rms/(nEntries ** 0.5)
     else:
         sumVals = sum(locList)
         sumValsSq = sum([_*_ for _ in locList])
@@ -2822,7 +2822,7 @@ These are the nodes that are sitting at the tops of untested paths.</p></div>
 The nodeID is such that when represented in binary, it should just show a 1 for each variable number that was
 included on the path taken from the top of the tree to reach the node.
 Note that two different nodes in a tree
-could have the same nodID.
+could have the same nodeID.
 However, they will be associated with different variables.
 So, to uniquely identify a
 node, you need its nodeID and the variable it's associated with.
@@ -2836,7 +2836,7 @@ can only have 1's in positions 0 through n-1.</p></div>
     &#34;&#34;&#34;Given a list of included variable numbers and the variable number associated with the node, return the nodeID.
     The nodeID is such that when represented in binary, it should just show a 1 for each variable number that was
     included on the path taken from the top of the tree to reach the node.  Note that two different nodes in a tree
-    could have the same nodID.  However, they will be associated with different variables.  So, to uniquely identify a
+    could have the same nodeID.  However, they will be associated with different variables.  So, to uniquely identify a
     node, you need its nodeID and the variable it&#39;s associated with.  Note that the nodeID for a node in layer n
     can only have 1&#39;s in positions 0 through n-1.&#34;&#34;&#34;
     nodeID = 0
@@ -2851,13 +2851,13 @@ can only have 1's in positions 0 through n-1.</p></div>
 <span>def <span class="ident">openAllGates</span></span>(<span>locNodeList)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>"Given a nodelist, open both gate for each node.</p></div>
+<div class="desc"><p>Given a nodelist, open both gates for each node.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def openAllGates(locNodeList):
-    &#34;&#34;&#34;&#34;Given a nodelist, open both gate for each node.&#34;&#34;&#34;
+    &#34;&#34;&#34;Given a nodelist, open both gates for each node.&#34;&#34;&#34;
     for currNode in locNodeList:
         currNode.incPathOpen = True
         currNode.excPathOpen = True
@@ -5336,7 +5336,7 @@ the path.</p></div>
         return varNameList
 
     def pathId(self):
-        &#34;&#34;&#34;Given a path, returns the decimal and the the binary string
+        &#34;&#34;&#34;Given a path, returns the decimal and the binary string
         representation of the pathID, where the binary representation
         shows which variables are included and which are excluded&#34;&#34;&#34;
         pathIdDecimal = 0
@@ -5424,7 +5424,7 @@ variables changes how the code chooses nodes when the includeVarPolicy is called
 <span>def <span class="ident">pathId</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Given a path, returns the decimal and the the binary string
+<div class="desc"><p>Given a path, returns the decimal and the binary string
 representation of the pathID, where the binary representation
 shows which variables are included and which are excluded</p></div>
 <details class="source">
@@ -5432,7 +5432,7 @@ shows which variables are included and which are excluded</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def pathId(self):
-    &#34;&#34;&#34;Given a path, returns the decimal and the the binary string
+    &#34;&#34;&#34;Given a path, returns the decimal and the binary string
     representation of the pathID, where the binary representation
     shows which variables are included and which are excluded&#34;&#34;&#34;
     pathIdDecimal = 0
