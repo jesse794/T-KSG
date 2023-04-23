@@ -1,0 +1,3 @@
+- mi_mcts
+  - This is one of the two new repos I made in April 2023 (by copying out of the ctree_internal_development repo) for posting the code to github so that Nick could have easy access to things. This repo is just the code along with a simple example run.
+  - I didn't include any of the development commits in this repo since there's not really much point in that.... I can't imagine that we'd need to go back, and if we did, I still have the development repo (ctree_internal_development), with all the commits, locally.
