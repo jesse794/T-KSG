@@ -662,16 +662,17 @@ class node:
         return result
 
     def nodeReachableFromRoot(self):
-        """Given a node, checks whether or not gates in the tree are such that one could reach the node."""
-        result = True  # Initialize to true, then set false if at any point node isn't reachable from its parent
-        currNode = self
-        while not currNode.nodeIsTheRoot():  # Step upwards until you reach the root node
-            if currNode.nodeReachableFromParent():  # Can you reach the parent of the current node?
-                currNode = currNode.getNodeParent()  # update currNode to point to its parent
-            else:
-                result = False
-                break
-        return result
+        """Given a node, checks whether gates in the tree are such that one could reach the node.
+        Caches result as attribute of the node"""
+        if not hasattr(self, '_reachability_cache'):
+            self._reachability_cache = True
+            currNode = self
+            while not currNode.nodeIsTheRoot():
+                if not currNode.nodeReachableFromParent():
+                    self._reachability_cache = False
+                    break
+                currNode = currNode.getNodeParent()
+        return self._reachability_cache
 
     def whichSideIsNode(self):
         """Tells whether a given node is on the include or the exclude side (1 or 0) of its parent."""
@@ -758,6 +759,9 @@ class node:
 
     def nodeStatsUpdate(self, locPath, playoutScore):
         """Given a score for a playout, update the statistics on the node's performance."""
+        oldNVisitsInc = self.nVisitsIncPathUnique
+        oldNVisitsExc = self.nVisitsExcPathUnique
+
         included = self.varNum in locPath.incVars  # See if node's variable is listed in the path's included variables
         locPathIdStr, locPathIdDec = locPath.pathId()  # get the ID num and string for the path.
 
@@ -784,8 +788,18 @@ class node:
             self.nVisitsExcPathUnique = self.countUniquePaths(False)
             self.meanScoreExc, self.meanScoreExcErr, self.rmsScoreExc = self.getMeanScore(False)
 
-        self.setGates()  # update which gates should be open for the node
+        # Only trigger gate evaluation if we're a summary node and have enough visits
+        is_summary_node = self is self.run.nodesColl.smry.get(self.varNum)
+        if is_summary_node and globProjectedGateDecision:
+            if (oldNVisitsInc != self.nVisitsIncPathUnique or
+                    oldNVisitsExc != self.nVisitsExcPathUnique):
+                if (self.nVisitsIncPathUnique > self.run.minVisitsForGateEval[-1] and
+                        self.nVisitsExcPathUnique > self.run.minVisitsForGateEval[-1]):
+                    self.setGates()
 
+        elif not globProjectedGateDecision:
+            # Original gate evaluation logic for when not using projected decisions
+            self.setGates()
         return
 
     def nodeStatsAdd(self, secondNode):
@@ -877,6 +891,8 @@ class node:
          threshPctAbs:  criteria is pct of scores over thresh.
          threshPctSignif:  criteria is significance of pct of scores over thresh
         """
+        oldIncOpen = self.incPathOpen
+        oldExcOpen = self.excPathOpen
 
         # Get the summary node for the nodes layer (summary nodes are labelled by the variable number of the layer)
         # If self is a smry node, then locSmryNode and self will wind up being the same thing, but this shouldn't cause
@@ -903,7 +919,7 @@ class node:
         # See if we have passed the threshold number of playouts on each side and so can make gate-closing decision.
         # If not, then just make sure both gates are open.
         if testNode.nVisitsIncPathUnique > testNode.run.minVisitsForGateEval[-1] and \
-           testNode.nVisitsExcPathUnique > testNode.run.minVisitsForGateEval[-1]:
+                testNode.nVisitsExcPathUnique > testNode.run.minVisitsForGateEval[-1]:
             diff = 0  # initialize variable to prevent syntax warning about using before defining.
             nSigmaDiff = 0  # initialize variable to prevent syntax warning about using before defining.
             gateDecisionAlreadyMade = False
@@ -983,6 +999,23 @@ class node:
         else:
             self.incPathOpen = True
             self.excPathOpen = True
+
+        # If gates changed, invalidate affected reachability caches
+        if (oldIncOpen != self.incPathOpen or oldExcOpen != self.excPathOpen):
+            # Clear cache for all nodes in affected subtrees
+            def clear_cache_recursive(node):
+                if hasattr(node, '_reachability_cache'):
+                    delattr(node, '_reachability_cache')
+                childInc = node.getNodeChild('inc')
+                childExc = node.getNodeChild('exc')
+                if childInc: clear_cache_recursive(childInc)
+                if childExc: clear_cache_recursive(childExc)
+
+            childInc = self.getNodeChild('inc')
+            childExc = self.getNodeChild('exc')
+            if childInc: clear_cache_recursive(childInc)
+            if childExc: clear_cache_recursive(childExc)
+
         return
 
 
@@ -1564,11 +1597,40 @@ def updateAllTreeGates(locRun):
     on the tree nodes are all updated after a playout.  But if projectGateDecision=True, then the gate
     decisions for the tree nodes depend on the summary node information.  So the order after a playout has to be:
     1) update tree nodes, 2) update summary nodes, 3) update tree gates."""
-    nodesD = locRun.nodesColl.all
-    for iVar in locRun.varNums:
-        layerNodes = nodesD[iVar]  # Dictionary of the nodes for the current variable
-        for iNode in list(layerNodes.values()):  # Loop over nodes in the layer
-            iNode.setGates()
+    if globProjectedGateDecision:
+        # First update summary nodes
+        for smryNode in locRun.nodesColl.smry.values():
+            if (smryNode.nVisitsIncPathUnique > smryNode.run.minVisitsForGateEval[-1] and
+                    smryNode.nVisitsExcPathUnique > smryNode.run.minVisitsForGateEval[-1]):
+                smryNode.setGates()
+
+        # Then efficiently propagate to tree nodes, tracking reachability by layer
+        nodesD = locRun.nodesColl.all
+        reachable_nodes = {0: {0: True}}  # Root node is always reachable
+
+        for iVar in locRun.varNums:
+            smryNode = locRun.nodesColl.smry[iVar]
+            reachable_nodes[iVar + 1] = {}
+
+            for treeNode in nodesD[iVar].values():
+                # Check if parent was reachable instead of traversing whole tree
+                parent = treeNode.getNodeParent()
+                parent_id = 0 if parent is None else parent.nodeID
+                if parent is None or reachable_nodes[iVar].get(parent_id, False):
+                    reachable_nodes[iVar][treeNode.nodeID] = True
+                    treeNode.incPathOpen = smryNode.incPathOpen
+                    treeNode.excPathOpen = smryNode.excPathOpen
+
+    else:
+        # Original logic for when not using projected decisions
+        nodesD = locRun.nodesColl.all
+        for iVar in locRun.varNums:
+            layerNodes = nodesD[iVar]
+            for iNode in list(layerNodes.values()):
+                if (iNode.nodeReachableFromRoot() and
+                        iNode.nVisitsIncPathUnique > iNode.run.minVisitsForGateEval[-1] and
+                        iNode.nVisitsExcPathUnique > iNode.run.minVisitsForGateEval[-1]):
+                    iNode.setGates()
     return
 
 
